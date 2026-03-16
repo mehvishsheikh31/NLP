@@ -1,0 +1,314 @@
+# NLP CHEAT SHEET - Quick Reference
+
+## INSTALLATION
+```bash
+pip install nltk scikit-learn spacy gensim pandas numpy
+python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('vader_lexicon')"
+python -m spacy download en_core_web_sm
+```
+
+---
+
+## QUICK CODE SNIPPETS
+
+### 1️⃣ TOKENIZATION
+```python
+from nltk.tokenize import word_tokenize, sent_tokenize
+
+text = "Hello world! How are you?"
+words = word_tokenize(text)      # ['Hello', 'world', '!', ...]
+sentences = sent_tokenize(text)  # ['Hello world!', 'How are you?']
+```
+
+### 2️⃣ LOWERCASE & REMOVE PUNCTUATION
+```python
+import string
+
+text = "Hello, World!"
+text = text.lower()  # "hello, world!"
+text = text.translate(str.maketrans('', '', string.punctuation))  # "hello world"
+```
+
+### 3️⃣ REMOVE STOP WORDS
+```python
+from nltk.corpus import stopwords
+
+stop_words = set(stopwords.words('english'))
+words = ["the", "cat", "is", "sleeping"]
+filtered = [w for w in words if w not in stop_words]  # ['cat', 'sleeping']
+```
+
+### 4️⃣ LEMMATIZATION
+```python
+from nltk.stem import WordNetLemmatizer
+
+lemmatizer = WordNetLemmatizer()
+lemmatizer.lemmatize("running")    # "run"
+lemmatizer.lemmatize("cats")       # "cat"
+lemmatizer.lemmatize("better")     # "good"
+```
+
+### 5️⃣ STEMMING
+```python
+from nltk.stem import PorterStemmer
+
+stemmer = PorterStemmer()
+stemmer.stem("running")   # "run"
+stemmer.stem("cats")      # "cat"
+```
+
+### 6️⃣ BAG OF WORDS VECTORIZATION
+```python
+from sklearn.feature_extraction.text import CountVectorizer
+
+texts = ["I love cats", "I love dogs", "cats are cute"]
+vec = CountVectorizer()
+X = vec.fit_transform(texts)
+print(X.toarray())
+```
+
+### 7️⃣ TF-IDF VECTORIZATION
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+texts = ["I love cats", "I love dogs", "cats are cute"]
+vec = TfidfVectorizer()
+X = vec.fit_transform(texts)
+print(X.toarray())  # Values between 0 and 1
+```
+
+### 8️⃣ SENTIMENT ANALYSIS
+```python
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+sia = SentimentIntensityAnalyzer()
+scores = sia.polarity_scores("I love this!")
+print(scores)
+# {'neg': 0.0, 'neu': 0.352, 'pos': 0.648, 'compound': 0.862}
+```
+
+### 9️⃣ NAMED ENTITY RECOGNITION
+```python
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Tim Cook works at Apple in California")
+
+for ent in doc.ents:
+    print(f"{ent.text} -> {ent.label_}")
+# Tim Cook -> PERSON
+# Apple -> ORG
+# California -> GPE
+```
+
+### 🔟 TEXT CLASSIFICATION
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+
+pipe = Pipeline([
+    ('tfidf', TfidfVectorizer()),
+    ('clf', MultinomialNB())
+])
+
+pipe.fit(["good", "bad"], [1, 0])
+print(pipe.predict(["excellent"]))  # [1]
+```
+
+### 1️⃣1️⃣ COSINE SIMILARITY
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+vec = TfidfVectorizer()
+X = vec.fit_transform(["machine learning", "deep learning", "pizza"])
+sim = cosine_similarity(X[0:1], X[1:2])[0][0]  # 0.707
+```
+
+### 1️⃣2️⃣ WORD FREQUENCY
+```python
+from collections import Counter
+from nltk.tokenize import word_tokenize
+
+text = "cats like cats and dogs like cats"
+tokens = word_tokenize(text.lower())
+freq = Counter(tokens)
+print(freq.most_common(3))  # [('cats', 3), ('like', 2), ('and', 1)]
+```
+
+### 1️⃣3️⃣ WORD2VEC EMBEDDINGS
+```python
+from gensim.models import Word2Vec
+
+sentences = [
+    ["machine", "learning", "is", "great"],
+    ["deep", "learning", "is", "powerful"]
+]
+
+model = Word2Vec(sentences, vector_size=100, window=5, min_count=1)
+vector = model.wv["learning"]  # Array of 100 numbers
+similar = model.wv.most_similar("learning", topn=3)  # Similar words
+```
+
+---
+
+## WORKFLOW - HOW TO APPROACH AN NLP PROBLEM
+
+```
+1. LOAD & EXPLORE DATA
+   ↓
+2. PREPROCESS TEXT
+   - Lowercase
+   - Remove punctuation
+   - Tokenize
+   - Remove stop words
+   - Lemmatize
+   ↓
+3. VECTORIZE
+   - Choose: Bag of Words OR TF-IDF OR Word2Vec
+   ↓
+4. CHOOSE MODEL
+   - Classification: Naive Bayes, SVM, Logistic Regression
+   - Clustering: K-Means
+   - Sentiment: Lexicon-based OR ML-based
+   ↓
+5. TRAIN & EVALUATE
+   - Split: Train/Test
+   - Metrics: Accuracy, Precision, Recall, F1
+   ↓
+6. PREDICT ON NEW DATA
+```
+
+---
+
+## COMPARISON TABLE
+
+| Task | Best Method | Library |
+|------|-------------|---------|
+| **Split into words** | word_tokenize() | NLTK |
+| **Remove common words** | stopwords | NLTK |
+| **Root form of words** | lemmatization > stemming | NLTK |
+| **Convert to numbers** | TF-IDF > Bag of Words | scikit-learn |
+| **Emotion detection** | SentimentIntensityAnalyzer | NLTK |
+| **Find entities** | spaCy | spaCy |
+| **Text similarity** | Cosine Similarity | scikit-learn |
+| **Word meanings** | Word2Vec | Gensim |
+| **Classification** | Naive Bayes + TF-IDF | scikit-learn |
+
+---
+
+## COMMON MISTAKES TO AVOID
+
+❌ Don't skip preprocessing (80% of NLP work!)
+✓ Always preprocess before machine learning
+
+❌ Don't use Bag of Words when TF-IDF exists
+✓ TF-IDF weighs words better
+
+❌ Don't train and test on same data
+✓ Split into train/test (70/30)
+
+❌ Don't ignore class imbalance (if 90% spam, 10% ham)
+✓ Use stratified splits or class weights
+
+❌ Don't forget to fit_transform on train, only transform on test
+✓ fit_transform(train_data), transform(test_data)
+
+❌ Don't hardcode stop words in production
+✓ Use built-in stopwords or domain-specific ones
+
+---
+
+## GLOSSARY
+
+| Term | Meaning |
+|------|---------|
+| **Token** | Individual unit (word, sentence, character) |
+| **Vectorization** | Converting text to numbers |
+| **TF** | Term Frequency (how often word appears) |
+| **IDF** | Inverse Document Frequency (rarity of word) |
+| **Embedding** | Vector representation learning word meanings |
+| **Entity** | Important word (person, place, organization) |
+| **Lemma** | Root/base form of a word |
+| **Corpus** | Large collection of texts |
+| **Sentiment** | Emotion/opinion in text |
+| **Baseline** | Simple model to compare against |
+
+---
+
+## STEP-BY-STEP: BUILD A SPAM CLASSIFIER
+
+```python
+# STEP 1: Import
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+
+# STEP 2: Prepare data
+train_texts = ["win money", "meeting tomorrow", "click now"]
+train_labels = [1, 0, 1]  # 1=spam, 0=not
+
+# STEP 3: Create pipeline
+pipe = Pipeline([
+    ('tfidf', TfidfVectorizer(max_features=100, stop_words='english')),
+    ('nb', MultinomialNB())
+])
+
+# STEP 4: Train
+pipe.fit(train_texts, train_labels)
+
+# STEP 5: Predict
+result = pipe.predict(["congratulations you won"])
+print("SPAM" if result[0] == 1 else "NOT SPAM")
+```
+
+---
+
+## WHEN TO USE WHAT
+
+**Bag of Words**: Simple, fast, good for small datasets
+**TF-IDF**: Better, accounts for word importance
+**Word2Vec**: When you need word similarity & semantics
+**Transformer (BERT)**: State-of-the-art, needs GPU
+
+**Stemming**: Fast, rough (sometimes too rough)
+**Lemmatization**: Slower, more accurate
+
+**Lexicon Sentiment**: No training data needed
+**ML Sentiment**: Better accuracy, needs labeled data
+
+---
+
+## RESOURCES
+
+📚 Books:
+- "Natural Language Processing in Action" - Lane, Howard, Hapke
+- "Speech and Language Processing" - Jurafsky & Martin (free online)
+
+📖 Libraries:
+- NLTK: www.nltk.org
+- scikit-learn: scikit-learn.org
+- spaCy: spacy.io
+- Gensim: radimrehurek.com/gensim
+
+🎓 Online:
+- Andrew Ng's NLP course
+- Fast.ai NLP course
+- Hugging Face Transformers documentation
+
+---
+
+## PRACTICE PROJECTS
+
+1. **Sentiment Analysis**: Classify movie reviews as positive/negative
+2. **Spam Detector**: Classify emails as spam/not spam
+3. **Topic Extraction**: Find main topics in documents
+4. **Text Similarity**: Find similar documents
+5. **Named Entity Extraction**: Extract persons, places, companies
+6. **Chatbot**: Simple intent classification for responses
+7. **Document Search**: Search engine for documents
+
+---
+
+**Happy learning! 🚀**
